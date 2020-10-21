@@ -18,3 +18,14 @@ Run the front-end
 ``` 
 npm start
 ```
+
+Install back-end dependencies 
+```
+cd ../backend
+sudo pip3 -r requirements.txt
+```
+
+Run the back-end (not necessary if you're just working on frontend)
+```
+sudo python3 app.py
+```
