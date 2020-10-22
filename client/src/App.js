@@ -1,28 +1,27 @@
 import React from 'react';
+import './App.css';
 import { BrowserRouter as Router, Route } from "react-router-dom"; 
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css";
 
-import Navbar from "./components/navbar.component"
-import HomePage from "./components/homepage.component"
-import About from "./components/about.component"
-/*import EditExercise from "./components/edit-exercise.component";
-import CreateExercise from "./components/create-exercise.component";
-import CreateUser from "./components/create-user.component";
+/* Componenets for each page + navbar */
+import Navbar from "./componenets/pages/Navbar";
+import Home from "./componenets/pages/Home";
+import About from "./componenets/pages/About"
+import Results from "./componenets/pages/Results"
 
-<Route path="/" exact component={ExercisesList} />
-<Route path="/edit/:id" component={EditExercise} />
-<Route path="/create" component={CreateExercise} /> 
-<Route path="/user" component={CreateUser} />
-*/
 
 function App() {
   return (
-    <Router>
-        <Navbar /> 
-        <Route path="/" exact component={HomePage} /> 
-        <Route path="/about" component={About} /> 
-    </Router>
+    <div className="App">
+      <Router>
+        <Navbar/>
+        <Route path="/" exact component={Home} className="Route"/> 
+        <Route path="/about" component={About} className="Route"/> 
+        <Route path="/results" component={Results} className="Route"/> 
+        
+      </Router>
+
+     
+    </div>
   );
 }
 
