@@ -1,17 +1,13 @@
 import React, { Component } from 'react'
+import "./About.css"
 
 export default class About extends Component {
-
-
-
-
-
 
     render() {
 
         return(
 
-            <div className="container">
+            <div className="container3">
                 <div className="text-center">
                     <h1>About HackMyDegree</h1>
                     <hr /> 
