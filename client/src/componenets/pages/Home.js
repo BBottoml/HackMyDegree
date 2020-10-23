@@ -17,15 +17,6 @@ class Home extends Component {
        
         this.state = {
             tags: [],
-
-            /* Everything is the same as the schema except name, which represents course_name
-            courses: [
-              { course_id: 3, name: "Distributed Systems"},
-              { course_id: 4, name: "Mangos" },
-              { course_id: 5, name: "Lemons" },
-              { course_id: 6, name: "Apricots" }
-            ],
-            */
             courses: null, 
 
             /* value from after fall 2019 slider */
@@ -37,8 +28,6 @@ class Home extends Component {
     async componentDidMount() {
         axios.get(host + '/courses')
         .then(response => {
-            //res.send(response.data);
-            //console.log(response.data)
             this.setState({courses: response.data})
             console.log(this.state.courses)
         })
@@ -117,9 +106,6 @@ class Home extends Component {
                             <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>Before Fall 2019</button>&nbsp;&nbsp;
                             <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>After Fall 2019</button>
                         </div>
-
-                    
-
 
                     </div> 
                     
