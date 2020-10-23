@@ -2,10 +2,12 @@ import React, { Component } from 'react'
 import axios from 'axios'
 import ReactTags from 'react-tag-autocomplete'
 import { useHistory } from 'react-router-dom';
+import Cookies from 'universal-cookie'
 import "./Home.css"
 
 import toggleButton from "../toggleButton";
 
+const cookies = new Cookies();
 
 
 class Home extends Component {

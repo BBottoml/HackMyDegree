@@ -2,10 +2,12 @@ import json
 import os 
 from flask import Flask, request
 from flask_mysqldb import MySQL
+from flask_cors import CORS
 from os.path import join, dirname
 from dotenv import load_dotenv
 
 app = Flask(__name__)
+CORS(app)
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
@@ -30,12 +32,7 @@ def sign_up():
     pswd = data["pswd"]
 
     # determine if user already exists
-    cur = mysql.connection.cursor()
-    query = "SELECT user_id FROM User WHERE email = %s"
-    cur.execute(query, (email,))
-    result = cur.fetchall()
-    cur.close()
-    if result != ():
+    if user_exists(email):
         return json.dumps({'status': 'invalid'})
     
     # insert into user table
@@ -45,15 +42,31 @@ def sign_up():
     cur.close()
     return json.dumps({'status': 'valid'})
 
-'''
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
     email = data["email"]
     pswd = data["pswd"]
 
-    # TODO: Investigate how to compare PASSWORD(pswd) against DB 
-''' 
+    if user_exists(email) == False:
+        return json.dumps({'status': 'invalid'})
+    
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT user_id FROM User WHERE email = %s AND PASSWORD(%s) = password", (email, pswd))
+    result = cur.fetchone()
+    if result == None or result == ():
+        return json.dumps({'status': 'invalid'})
+    
+    user_id = int(result[0])
+    return json.dumps({'status': 'valid', 'user_id': user_id})
+
+def user_exists(email):
+    cur = mysql.connection.cursor()
+    query = "SELECT user_id FROM User WHERE email = %s"
+    cur.execute(query, (email,))
+    result = cur.fetchall()
+    cur.close()
+    return result != ()
 
 '''
 This function transforms SQL result to JSON for response
