@@ -20,7 +20,7 @@ mysql = MySQL(app)
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
     cur = mysql.connection.cursor()
-    cur.execute('''SELECT course_title, course_name FROM Course''')
+    cur.execute("SELECT course_id, course_title, course_name FROM Course")
     return transform_to_json(cur)
 
 @app.route("/api/register", methods=["POST"])
@@ -44,6 +44,16 @@ def sign_up():
     mysql.connection.commit()
     cur.close()
     return json.dumps({'status': 'valid'})
+
+'''
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    email = data["email"]
+    pswd = data["pswd"]
+
+    # TODO: Investigate how to compare PASSWORD(pswd) against DB 
+''' 
 
 '''
 This function transforms SQL result to JSON for response
