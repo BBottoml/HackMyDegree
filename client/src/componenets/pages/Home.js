@@ -26,7 +26,7 @@ class Home extends Component {
               { course_id: 6, name: "Apricots" }
             ],
             */
-           courses: null, 
+            courses: null, 
 
             /* value from after fall 2019 slider */
             afterFall2019: true,
