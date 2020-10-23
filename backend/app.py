@@ -22,7 +22,7 @@ mysql = MySQL(app)
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT course_id, course_title, course_name FROM Course")
+    cur.execute("SELECT course_id as id, course_title as name FROM Course")
     return transform_to_json(cur)
 
 @app.route("/api/register", methods=["POST"])
