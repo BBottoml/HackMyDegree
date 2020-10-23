@@ -3,7 +3,8 @@ import axios from 'axios'
 import Cookies from 'universal-cookie'
 import "./About.css"
 
-const cookies = new Cookies();
+const cookies = new Cookies()
+const host = "http://104.196.68.45/api"
 
 
 export default class About extends Component {
@@ -28,7 +29,7 @@ export default class About extends Component {
 
     handleLogin(event) {
         axios
-        .post('http://localhost/api/login', {"email": this.state.email, "pswd": this.state.password})
+        .post(host + '/login', {"email": this.state.email, "pswd": this.state.password})
         .then((res) => {
             let resp = res.data.status
             if (resp === "invalid") {
@@ -46,7 +47,7 @@ export default class About extends Component {
 
     handleRegister(event) {
         axios
-            .post('http://localhost/api/register', {"email": this.state.email, "pswd": this.state.password})
+            .post(host + '/register', {"email": this.state.email, "pswd": this.state.password})
             .then((res) => {
                 let resp = res.data.status
                 if (resp === "invalid") {

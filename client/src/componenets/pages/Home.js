@@ -8,6 +8,7 @@ import "./Home.css"
 import toggleButton from "../toggleButton";
 
 const cookies = new Cookies();
+const host = "http://104.196.68.45/api"
 
 
 class Home extends Component {
@@ -17,18 +18,33 @@ class Home extends Component {
         this.state = {
             tags: [],
 
-            /* Everything is the same as the schema except name, which represents course_name*/
+            /* Everything is the same as the schema except name, which represents course_name
             courses: [
               { course_id: 3, name: "Distributed Systems"},
               { course_id: 4, name: "Mangos" },
               { course_id: 5, name: "Lemons" },
               { course_id: 6, name: "Apricots" }
             ],
+            */
+           courses: null, 
 
             /* value from after fall 2019 slider */
             afterFall2019: true,
 
           }
+    }
+
+    async componentDidMount() {
+        axios.get(host + '/courses')
+        .then(response => {
+            //res.send(response.data);
+            //console.log(response.data)
+            this.setState({courses: response.data})
+            console.log(this.state.courses)
+        })
+        .catch(err => {
+            console.log(err)
+        })
     }
 
     handleClick = () => {
@@ -68,38 +84,48 @@ class Home extends Component {
 
 
     render() {
-        return (
-            <div className="container2">
-                
-                <div className="text-center">
-                    <h1>HackMyDegree</h1> 
-                    <hr /> 
-                    <p>HackMyDegree is a website that enables Purdue CS majors to easily, and efficiently, plan their track requirements. Get started below!</p>
-                    <h3>Step (i) Select courses you have already taken</h3>
-                    <p>These are courses that can be counted towards a main track requirement or as an elective</p>
-                    <ReactTags
-                        tags={this.state.tags}
-                        suggestions={this.state.courses}
-                        onDelete={this.onDelete.bind(this)}
-                        onAddition={this.onAddition.bind(this)}
-                        placeholder="Add new course..." />
-                    <br />
-                    <h3>Step (ii) Select your track timeline</h3> 
-                    <p>In other words, if you started Fall 2019 or forward, select After Fall 2019 otherwise select before</p>
-
-                    {/* Make a slider */}
-                    <div class="selection-stage">
-                        <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>Before Fall 2019</button>&nbsp;&nbsp;
-                        <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>After Fall 2019</button>
+        if (this.state.courses == null) {
+            return (
+                <div>
+                    <div className="text-center">
+                        <h1>Loading...</h1>
                     </div>
+                </div>
+            )
+        } else {
+            return (
+                <div className="container2">
+                    
+                    <div className="text-center">
+                        <h1>HackMyDegree</h1> 
+                        <hr /> 
+                        <p>HackMyDegree is a website that enables Purdue CS majors to easily, and efficiently, plan their track requirements. Get started below!</p>
+                        <h3>Step (i) Select courses you have already taken</h3>
+                        <p>These are courses that can be counted towards a main track requirement or as an elective</p>
+                        <ReactTags
+                            tags={this.state.tags}
+                            suggestions={this.state.courses}
+                            onDelete={this.onDelete.bind(this)}
+                            onAddition={this.onAddition.bind(this)}
+                            placeholder="Add new course..." />
+                        <br />
+                        <h3>Step (ii) Select your track timeline</h3> 
+                        <p>In other words, if you started Fall 2019 or forward, select After Fall 2019 otherwise select before</p>
 
-                   
+                        {/* Make a slider */}
+                        <div class="selection-stage">
+                            <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>Before Fall 2019</button>&nbsp;&nbsp;
+                            <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>After Fall 2019</button>
+                        </div>
+
+                    
 
 
-                </div> 
-                
-            </div>
-        )
+                    </div> 
+                    
+                </div>
+            )
+        }
     }
 }
 
