@@ -8,7 +8,7 @@ import "./Home.css"
 import toggleButton from "../toggleButton";
 
 const cookies = new Cookies();
-const host = "http://104.196.68.45/api"
+const host = "http://35.229.29.153/api"
 
 
 class Home extends Component {

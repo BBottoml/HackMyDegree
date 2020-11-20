@@ -4,7 +4,7 @@ import Cookies from 'universal-cookie'
 import "./About.css"
 
 const cookies = new Cookies()
-const host = "http://104.196.68.45/api"
+const host = "http://35.229.29.153/api"
 
 
 export default class About extends Component {
