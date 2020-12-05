@@ -106,9 +106,9 @@ Credit: https://stackoverflow.com/questions/43796423/python-converting-mysql-que
 '''
 def transform_to_json(cur):
     row_headers=[x[0] for x in cur.description] 
-    result = cur.fetchall()
+    results = cur.fetchall()
     json_data=[]
-    for result in result:
+    for result in results:
         json_data.append(dict(zip(row_headers,result)))
     cur.close()
     return json.dumps(json_data)
