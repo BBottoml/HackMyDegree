@@ -25,6 +25,38 @@ def get_courses():
     cur.execute("SELECT course_id as id, course_title as name FROM Course")
     return transform_to_json(cur)
 
+@app.route("/api/tracks", methods=["GET"])
+def get_tracks():
+    cur = mysql.connection.cursor() 
+    cur.execute("SELECT track_id as id, track_name as name FROM Track")
+    return transform_to_json(cur)
+
+@app.route("/api/add/courses", methods=["POST"])
+def add_courses(): 
+    data = request.get_json()
+    user_id = data["user_id"]
+    courses = data["courses"]
+
+    cur = mysql.connection.cursor()
+    for course in courses:
+        cur.execute("INSERT INTO User_Course(user_id, course_id) VALUES (%d, %d)", (user_id, course))
+    mysql.connection.commit()
+    cur.close()
+    return json.dumps({'status': 'valid'})
+
+@app.route("/api/add/tracks", methods=["POST"])
+def add_courses(): 
+    data = request.get_json()
+    user_id = data["user_id"]
+    tracks = data["tracks"]
+
+    cur = mysql.connection.cursor()
+    for track in tracks:
+        cur.execute("INSERT INTO User_Track(user_id, track_id) VALUES (%d, %d)", (user_id, track))
+    mysql.connection.commit()
+    cur.close()
+    return json.dumps({'status': 'valid'})
+
 @app.route("/api/register", methods=["POST"])
 def sign_up():
     data = request.get_json()
