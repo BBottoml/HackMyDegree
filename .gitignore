@@ -1,3 +1,4 @@
 backend/.env
+backend/*.out
 *.csv
 venv/
