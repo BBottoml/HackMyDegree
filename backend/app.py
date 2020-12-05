@@ -45,7 +45,7 @@ def add_courses():
     return json.dumps({'status': 'valid'})
 
 @app.route("/api/add/tracks", methods=["POST"])
-def add_courses(): 
+def add_tracks(): 
     data = request.get_json()
     user_id = data["user_id"]
     tracks = data["tracks"]
