@@ -106,16 +106,15 @@ def login():
     user_id = int(result[0])
     return json.dumps({'status': 'valid', 'user_id': user_id})
 
-'''
 @app.route("/api/compute", methods=["POST"])
 def compute_schedule():
     data = request.get_json()
     user_id = data["user_id"]
 
     cur = mysql.connection.cursor()
-    query = "SELECT track_id FROM User_Track WHERE user_id = %s"
-    cur.execute(query, (user_id,))
-''' 
+    cur.execute("SELECT track_id FROM User_Track WHERE user_id = %s", (user_id))
+    tracks = cur.fetchall()
+    print(tracks)
 
 def user_exists(email):
     cur = mysql.connection.cursor()
