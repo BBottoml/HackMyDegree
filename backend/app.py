@@ -112,9 +112,122 @@ def compute_schedule():
     user_id = data["user_id"]
 
     cur = mysql.connection.cursor()
-    cur.execute("SELECT track_id FROM User_Track WHERE user_id = %s", (user_id))
-    tracks = cur.fetchall()
-    print(tracks)
+    cur.execute("""
+                SELECT Track_Req.track_id, Track_Req.course_id, Track_Req.track_req_id, Professor.score
+                FROM Track_Req
+                        LEFT JOIN Professor_Course ON Professor_Course.course_id = Track_Req.course_id
+                        LEFT JOIN Professor ON Professor_Course.prof_id = Professor.prof_id
+
+                WHERE Track_Req.track_id IN (SELECT track_id FROM User_Track WHERE user_id = %s)
+                AND Track_Req.track_req_id NOT IN
+                    (SELECT TR.track_req_id
+                    FROM User_Course UR
+                                INNER JOIN Track_Req TR ON TR.course_id = UR.course_id
+                    WHERE user_id = %s
+                        AND TR.track_id = Track_Req.track_id
+                    )
+
+                GROUP BY Track_Req.track_id, Track_Req.course_id, track_req_id, Professor.score
+                HAVING MAX(Professor.score)
+                ORDER BY Professor.score DESC;
+                """, (user_id,user_id)) # this returns the needed courses sorted by professor RMT score to complete tracks
+    results = cur.fetchall()
+    
+    req_courses = {} 
+    track_map = {}
+
+    for result in results:
+        block = result[2] 
+        if result[0] in track_map:
+            if block in track_map[result[0]]:
+                continue
+        else:
+            track_map[result[0]] = set() # set of blocks
+
+        track_map[result[0]].add(block)
+        if result[1] in req_courses:
+            req_courses[result[1]].add(result[0])
+        else:
+            req_courses[result[1]] = set()
+            req_courses[result[1]].add(result[0])
+
+    cur.execute("""
+                SELECT TR.track_id,
+                Track.num_electives,
+                TR.track_el_id,
+                TR.course_id,
+                (SELECT COUNT(Track_Elective.course_id)
+                    FROM Track_Elective
+                    WHERE TR.course_id = Track_Elective.course_id
+                    AND Track_Elective.track_id IN (SELECT track_id FROM User_Track WHERE user_id = %s)) as cnt
+
+                FROM Track_Elective TR
+                        INNER JOIN Track ON TR.track_id = Track.track_id
+                WHERE TR.track_id IN (SELECT track_id FROM User_Track WHERE user_id = %s)
+                GROUP BY TR.track_id, Track.num_electives, TR.track_el_id, TR.course_id
+                ORDER BY cnt DESC;
+                """, (user_id, user_id))
+    results = cur.fetchall()
+
+    track_elective_block = {} 
+    track_elective_num = {} 
+    electives = set()
+    for result in results:
+        course_id = result[3] 
+        block_id = result[2]
+        track_id = result[0] 
+
+        if block_id is None:
+            if track_id in track_elective_num:
+                remaining_courses = track_elective_num[track_id]
+                if remaining_courses == 0:
+                    continue
+            else:
+                track_elective_num[track_id] = result[1]
+                remaining_courses = result[1]
+            
+            if course_id in req_courses and track_id in req_courses[course_id]:
+                continue # a required course cannot count towards an elective
+            track_elective_num[track_id] -= 1
+            electives.add(course_id)
+        else:
+            if track_id in track_elective_block:
+                if block_id in track_elective_block[track_id]:
+                    continue 
+            else:
+                track_elective_block[track_id] = set()
+            
+            if course_id in req_courses and track_id in req_courses[course_id]:
+                continue # a required course cannot count towards an elective
+            track_elective_block[track_id].add(block_id)
+            electives.add(course_id)
+
+    courses = []
+    for elective in electives:
+        cur.execute("""
+                    SELECT user_id
+                    FROM User_Course
+                    WHERE user_id=%s AND course_id=%s
+                    """, (user_id, elective))
+        result = cur.fetchone()
+        if result == None or result == ():
+            courses.append(elective)
+
+
+    for key,values in req_courses.items():
+        courses.append(key) 
+
+    course_names = []
+    for course in courses:
+        cur.execute("""
+                    SELECT Course.course_title as name
+                    FROM Course
+                    WHERE course_id=%s
+                    """, (course,))
+        result = cur.fetchone()
+        course_names.append(result[0])
+    
+    return json.dumps({'courses': course_names}) 
 
 def user_exists(email):
     cur = mysql.connection.cursor()
