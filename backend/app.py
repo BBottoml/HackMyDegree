@@ -39,9 +39,23 @@ def add_courses():
 
     cur = mysql.connection.cursor()
     for course in courses:
-        cur.execute("INSERT INTO User_Course(user_id, course_id) VALUES (%d, %d)", (user_id, course))
+        cur.execute("INSERT INTO User_Course(user_id, course_id) VALUES (%s, %s)", (user_id, course))
     mysql.connection.commit()
     cur.close()
+    
+    return json.dumps({'status': 'valid'})
+
+@app.route("/api/add/hours", methods=["POST"])
+def add_hours():
+    data = request.get_json()
+    user_id = data["user_id"]
+    hours = data["hours"]
+    
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE User SET max_hours= %s WHERE user_id = %s", (hours, user_id))
+    mysql.connection.commit()
+    cur.close() 
+    
     return json.dumps({'status': 'valid'})
 
 @app.route("/api/add/tracks", methods=["POST"])
@@ -52,7 +66,7 @@ def add_tracks():
 
     cur = mysql.connection.cursor()
     for track in tracks:
-        cur.execute("INSERT INTO User_Track(user_id, track_id) VALUES (%d, %d)", (user_id, track))
+        cur.execute("INSERT INTO User_Track(user_id, track_id) VALUES (%s, %s)", (user_id, track))
     mysql.connection.commit()
     cur.close()
     return json.dumps({'status': 'valid'})
@@ -91,6 +105,17 @@ def login():
     
     user_id = int(result[0])
     return json.dumps({'status': 'valid', 'user_id': user_id})
+
+'''
+@app.route("/api/compute", methods=["POST"])
+def compute_schedule():
+    data = request.get_json()
+    user_id = data["user_id"]
+
+    cur = mysql.connection.cursor()
+    query = "SELECT track_id FROM User_Track WHERE user_id = %s"
+    cur.execute(query, (user_id,))
+''' 
 
 def user_exists(email):
     cur = mysql.connection.cursor()
