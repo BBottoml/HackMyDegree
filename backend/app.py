@@ -12,6 +12,7 @@ CORS(app)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
+# prepared statement client setup
 app.config['MYSQL_HOST'] = os.environ.get("DB_HOST")
 app.config['MYSQL_USER'] = os.environ.get("DB_UNAME")
 app.config['MYSQL_PASSWORD'] = os.environ.get("DB_PASSWORD")
@@ -19,30 +20,85 @@ app.config['MYSQL_DB'] = os.environ.get("DB_NAME")
 
 mysql = MySQL(app)
 
+# sqlAlchemy setup (ORM)
+# remark: sqlalchemy needs to be imported after call to load_dotenv
+from sqlalchemy import * 
+
+URI = 'mysql://' + os.environ.get("DB_UNAME") + ':' + os.environ.get("DB_PASSWORD") + '@' + os.environ.get("DB_HOST")
+engine = create_engine(URI)
+USE_DB = 'USE ' + os.environ.get("DB_NAME")
+engine.execute(USE_DB)
+engine.echo = False
+metadata = MetaData(engine)
+conn = engine.connect()
+
+# models
+user_courses = Table(
+   'User_Course', metadata, 
+   Column('user_id', Integer), 
+   Column('course_id', String), 
+)
+
+user_tracks = Table(
+   'User_Track', metadata, 
+   Column('user_id', Integer), 
+   Column('track_id', String), 
+)
+
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT course_id as id, course_title as name FROM Course")
-    return transform_to_json(cur)
+    id, name = column('course_id'), column('course_title')
+    q = select([id.label('id'), name.label('name')]).select_from(text('Course'))
+    result = conn.execute(q)
+    return orm_result_to_json(result)
 
 @app.route("/api/tracks", methods=["GET"])
 def get_tracks():
+    id, name = column('track_id'), column('track_name')
+    q = select([id.label('id'), name.label('name')]).select_from(text('Track'))
+    result = conn.execute(q)
+    return orm_result_to_json(result)
+
+'''
+@app.route("/api/hours", methods=["POST"])
+def get_hours():
+    data = request.get_json()
+    user_id = data["user_id"]
+
     cur = mysql.connection.cursor() 
-    cur.execute("SELECT track_id as id, track_name as name FROM Track")
-    return transform_to_json(cur)
+    cur.execute("SELECT max_hours as hours FROM User WHERE user_id = %s", (user_id, ))
+    hours = cur.fetchone()[0]
+    return json.dumps({'hours': hours})
+'''
 
 @app.route("/api/add/courses", methods=["POST"])
 def add_courses(): 
     data = request.get_json()
-    user_id = data["user_id"]
+    uid = data["user_id"]
     courses = data["courses"]
 
-    cur = mysql.connection.cursor()
+    q = user_courses.delete(None).where(user_courses.c.user_id == uid)
+    conn.execute(q)
+
     for course in courses:
-        cur.execute("INSERT INTO User_Course(user_id, course_id) VALUES (%s, %s)", (user_id, course))
-    mysql.connection.commit()
-    cur.close()
-    
+        q = user_courses.insert(None).values(user_id=uid, course_id=course)
+        conn.execute(q) 
+
+    return json.dumps({'status': 'valid'})
+
+@app.route("/api/add/tracks", methods=["POST"])
+def add_tracks(): 
+    data = request.get_json()
+    uid = data["user_id"]
+    tracks = data["tracks"]
+
+    q = user_tracks.delete(None).where(user_tracks.c.user_id == uid)
+    conn.execute(q)
+
+    for track in tracks:
+        q = user_tracks.insert(None).values(user_id=uid, track_id=track)
+        conn.execute(q) 
+
     return json.dumps({'status': 'valid'})
 
 @app.route("/api/add/hours", methods=["POST"])
@@ -56,19 +112,6 @@ def add_hours():
     mysql.connection.commit()
     cur.close() 
     
-    return json.dumps({'status': 'valid'})
-
-@app.route("/api/add/tracks", methods=["POST"])
-def add_tracks(): 
-    data = request.get_json()
-    user_id = data["user_id"]
-    tracks = data["tracks"]
-
-    cur = mysql.connection.cursor()
-    for track in tracks:
-        cur.execute("INSERT INTO User_Track(user_id, track_id) VALUES (%s, %s)", (user_id, track))
-    mysql.connection.commit()
-    cur.close()
     return json.dumps({'status': 'valid'})
 
 @app.route("/api/register", methods=["POST"])
@@ -237,6 +280,16 @@ def user_exists(email):
     cur.close()
     return result != ()
 
+def orm_result_to_json(result):
+    arr = []
+    for row in result:
+        row_map = dict()
+        for column, value in row.items():
+            row_map[column] = value
+        arr.append(row_map)
+    return json.dumps(arr)
+
+# DEPRECATED: No longer needed since certain queries now executed using ORM
 '''
 This function transforms SQL result to JSON for response
 Credit: https://stackoverflow.com/questions/43796423/python-converting-mysql-query-result-to-json
