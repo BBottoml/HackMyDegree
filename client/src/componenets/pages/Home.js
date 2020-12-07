@@ -16,9 +16,12 @@ class Home extends Component {
         super(props)
        
         this.state = {
+
+            //NOTE: tags represent course tags, kept as it was
             tags: [],
             courses: null,
             tracks: null,
+            trackTags: [],
             /* value from after fall 2019 slider */
             // afterFall2019: true,
 
@@ -37,12 +40,19 @@ class Home extends Component {
 
         axios.get(host + '/tracks')
         .then(response => {
+            console.log("INSIDE TRACKS")
             this.setState({tracks: response.data})
             console.log(this.state.tracks)
         })
         .catch(err => {
             console.log(err)
+            console.log("INSIDE ERRORS")
+
         })
+
+        console.log("AFTER TRACKS")
+
+        
     }
 
     handleClick = () => {
@@ -66,6 +76,25 @@ class Home extends Component {
         tags.splice(i, 1)
         this.setState({ tags })
     }
+
+    onTrackDeletion(i) {
+
+        if (this.state.trackTags.length !== 0) {
+            const trackTag = this.state.trackTags[i]
+            const tracks = this.state.tracks
+            for (var j = 0; j < this.state.tracks.length; j++) {
+                if (this.state.tracks[i]["track_id"] === trackTag["name"]) {
+                    tracks[j]["disabled"] = false
+                    this.setState({tracks})
+                    break
+                }
+            }
+        }
+
+        const trackTags = this.state.trackTags.slice(0)
+        trackTags.splice(i, 1)
+        this.setState( {trackTags} )
+    }
      
       onAddition (tag) {
         for (var i = 0; i < this.state.courses.length; i++) {
@@ -80,6 +109,20 @@ class Home extends Component {
         this.setState({ tags })
       }
 
+      onTrackAddition(trackTag) {
+          console.log(trackTag["name"])
+        for (var i = 0; i < this.state.tracks.length; i++) {
+            if (this.state.tracks[i]["name"] === trackTag["name"]) {
+                console.log("HERE 1")
+                const tracks = this.state.tracks
+                tracks[i]["disabled"] = true
+                this.setState( { tracks } )
+                break
+            }
+        }
+        const trackTags = [].concat(this.state.trackTags, trackTag)
+        this.setState({trackTags})
+      }
 
     render() {
         if (this.state.courses == null) {
@@ -104,7 +147,7 @@ class Home extends Component {
                             tags={this.state.tags}
                             suggestions={this.state.courses}
                             onDelete={this.onDelete.bind(this)}
-                            onAddition={this.onAddition.bind(this)}
+                            onAddition={this.onAddition.bind(this)}    //TODO:CHANGEEE
                             placeholder="Add new course..." />
                         <br />
                         {/* <h3>Step (ii) Select your track timeline</h3> 
@@ -118,11 +161,12 @@ class Home extends Component {
 
                         <h3>Step (ii) Select the tracks you wish to complete</h3>
                         <ReactTags
-                            tags={this.state.tags}
-                            suggestions={this.state.tracks}
+                            tags={this.state.trackTags} // <-- THIS IS ISSUE
+                            suggestions={this.state.tracks} 
                             onDelete={this.onDelete.bind(this)}
-                            onAddition={this.onAddition.bind(this)}
+                            onAddition={this.onTrackAddition.bind(this)}
                             placeholder="Add new track..." />
+                            <br/>
                     </div> 
                     
                 </div>
