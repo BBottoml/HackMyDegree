@@ -14,16 +14,15 @@ class Home extends Component {
       this.state = {
           //NOTE: tags represent course tags, kept as it was
           tags: [],
-          courses: null,
-          tracks: null,
+          courses: [],
+          tracks: [],
           trackTags: [],
           /* value from after fall 2019 slider */
           // afterFall2019: true,
         }
   }
   //IMPORTANT NOTE: Took out async keyword before componentDidMount()
-   componentDidMount() {
-      this._isMounted = true
+    componentDidMount() {
       axios.get(host + '/courses')
       .then(response => {
           this.setState({courses: response.data})
@@ -34,14 +33,11 @@ class Home extends Component {
       axios.get(host + '/tracks')
       .then(response => {
         //   console.log("INSIDE TRACKS")
-          this.setState({tracks: response.data})
+        this.setState({tracks: response.data})
       })
       .catch(err => {
           console.log(err)
-        //   console.log("INSIDE ERRORS")
       })
-    //   console.log("AFTER TRACKS")
-    
   }
   handleClick = () => {
     this.props.history.push(
@@ -49,6 +45,8 @@ class Home extends Component {
         data: [this.state.tags, this.state.trackTags]
     })
   }
+
+
   onDelete (i) {
       if (this.state.tags.length !== 0) {
           const tag = this.state.tags[i]
@@ -65,6 +63,7 @@ class Home extends Component {
       tags.splice(i, 1)
       this.setState({ tags })
   }
+
   onTrackDeletion(i) {
       if (this.state.trackTags.length !== 0) {
           const trackTag = this.state.trackTags[i]
@@ -77,6 +76,8 @@ class Home extends Component {
               }
           }
       }
+
+
       const trackTags = this.state.trackTags.slice(0)
       trackTags.splice(i, 1)
       this.setState( {trackTags} )

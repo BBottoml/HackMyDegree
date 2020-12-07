@@ -10,7 +10,10 @@ export class Results extends Component {
     }
 
     handleClick = () => {
-       
+        // this.props.history.push(
+        //     {pathname: "/results"
+        //     data:
+        // })
   
     }
 }
