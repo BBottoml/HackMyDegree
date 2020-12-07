@@ -2,10 +2,11 @@ import React, { Component } from 'react'
 import axios from 'axios'
 import ReactTags from 'react-tag-autocomplete'
 // import { useHistory } from 'react-router-dom';
-// import Cookies from 'universal-cookie'
+import Cookies from 'universal-cookie'
 import "./Home.css"
+import Button from 'react-bootstrap/Button';
 // import toggleButton from "../toggleButton";
-// const cookies = new Cookies();
+const cookies = new Cookies();
 const host = "http://35.229.29.153/api"
 class Home extends Component {
   constructor(props) {
@@ -32,20 +33,66 @@ class Home extends Component {
       })
       axios.get(host + '/tracks')
       .then(response => {
-        //   console.log("INSIDE TRACKS")
         this.setState({tracks: response.data})
       })
       .catch(err => {
           console.log(err)
       })
   }
-  handleClick = () => {
+  handleSubmitClick = () => {
+    /*
+    Make AXIOS Post calls for both add courses and add tracks.
+
+    To get user's ID: 
+    
+    In handleLogin() in Login.js: cookies.get('user_id', res.data.user_id, { path: '/', maxAge: 999999})
+
+    */
+    axios
+    .post(host + "/add/courses", {"user_id": cookies.get('user_id'), "courses": this.state.tags})
+    .then((res) => {
+        let resp = res.data.status
+        if (resp === "invalid") {
+            alert("Something went wrong for Adding Courses")
+        } else {
+            alert("Adding courses success")
+        }
+    })
+    .catch(err => {
+        console.error(err);}
+    )
+
+    axios
+    .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": this.state.trackTags})
+    .then((res) => {
+        let resp = res.data.status
+        if (resp === "invalid") {
+            alert("Something went wrong for Adding Tracks")
+        } else {
+            alert("Adding tracks success")
+        }
+    })
+    .catch(err => {
+        console.error(err);}
+    )
+
     this.props.history.push(
         {pathname: "/results",
         data: [this.state.tags, this.state.trackTags]
     })
-  }
 
+}
+
+//   submitBtnOnClick() {
+
+
+//   }
+
+//     // this.props.history.push(
+//     //     {pathname: "/results",
+//     //     data: [this.state.tags, this.state.trackTags]
+//     // })
+//   }
 
   onDelete (i) {
       if (this.state.tags.length !== 0) {
@@ -95,6 +142,7 @@ class Home extends Component {
       const tags = [].concat(this.state.tags, tag)
       this.setState({ tags })
     }
+    
     onTrackAddition(trackTag) {
         console.log(trackTag["name"])
       for (var i = 0; i < this.state.tracks.length; i++) {
@@ -150,6 +198,11 @@ class Home extends Component {
                           onAddition={this.onTrackAddition.bind(this)}
                           placeholder="Add new track..." />
                           <br/>
+
+                            <Button variant="secondary" size="lg" onClick={this.handleSubmitClick}>
+                                Submit
+                            </Button>{' '}
+
                   </div>
                 
               </div>
