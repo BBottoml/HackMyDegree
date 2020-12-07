@@ -8,6 +8,7 @@ import Button from 'react-bootstrap/Button';
 // import toggleButton from "../toggleButton";
 const cookies = new Cookies();
 const host = "http://35.229.29.153/api"
+
 class Home extends Component {
   constructor(props) {
       super(props)
@@ -55,26 +56,20 @@ class Home extends Component {
     console.log("courses")
     console.log(this.state.tags)
 
-    var chosen_course_ids = []
+    var chosen_ids = []
 
     for (var i = 0; i < this.state.tags.length; i++) {
-        for (var j = 0; j < this.state.courses.length; j++) {
-            if (this.state.tags[i] === this.state.courses[j]["name"]) {
-                chosen_course_ids.push(this.state.courses[j]["course_id"])
-                break
-            }
-        }
+        console.log("here5")
+        chosen_ids.push(this.state.courses[i]["id"])
     }
     axios
-    .post(host + "/add/courses", {"user_id": cookies.get('user_id'), "courses": chosen_course_ids})
+    .post(host + "/add/courses", {"user_id": cookies.get('user_id'), "courses": chosen_ids})
     .then((res) => {
         let resp = res.data.status
         if (resp === "invalid") {
             console.log("INVALID")
-            alert("Something went wrong for Adding Courses")
         } else {
             console.log("nOT INVALID")
-            alert("Adding courses success")
         }
     })
     .catch(err => {
@@ -82,27 +77,20 @@ class Home extends Component {
     )
 
 
-    var chosen_track_ids = []
+    var chosen_ids = []
 
     for (var k = 0; k < this.state.trackTags.length; k++) {
-        for (var p = 0; p < this.state.tracks.length; p++) {
-            if (this.state.trackTags[k] === this.state.tracks[p]["name"]) {
-                chosen_track_ids.push(this.state.tracks[p]["track_id"])
-                break
-            }
-        }
+        chosen_ids.push(this.state.trackTags[k]["id"])
     }
 
     axios
-    .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": chosen_track_ids})
+    .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": chosen_ids})
     .then((res) => {
         let resp = res.data.status
         if (resp === "invalid") {
             console.log("INVALID")
-            alert("Something went wrong for Adding Tracks")
         } else {
             console.log("Tracks not invalid")
-            alert("Adding tracks success")
         }
     })
     .catch(err => {
@@ -132,7 +120,7 @@ class Home extends Component {
           const tag = this.state.tags[i]
           const courses = this.state.courses
           for (var j = 0; j < this.state.courses.length; j++) {
-              if (this.state.courses[j]["course_id"] === tag["course_id"]) {
+              if (this.state.courses[j]["id"] === tag["id"]) {
                   courses[j]["disabled"] = false
                   this.setState( {courses} )
                   break
@@ -149,7 +137,7 @@ class Home extends Component {
           const trackTag = this.state.trackTags[i]
           const tracks = this.state.tracks
           for (var j = 0; j < this.state.tracks.length; j++) {
-              if (this.state.tracks[i]["track_id"] === trackTag["track_id"]) {
+              if (this.state.tracks[i]["id"] === trackTag["id"]) {
                   tracks[j]["disabled"] = false
                   this.setState({tracks})
                   break
@@ -189,8 +177,13 @@ class Home extends Component {
       }
       const trackTags = [].concat(this.state.trackTags, trackTag)
       this.setState({trackTags})
+      console.log(this.state.trackTags)
     }
   render() {
+        if (cookies.get("user_id") == null) {
+            window.location.href = "/"
+        }
+
       if (this.state.courses == null) {
           return (
               <div>
