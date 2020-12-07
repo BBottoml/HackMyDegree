@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
 import axios from 'axios'
 import ReactTags from 'react-tag-autocomplete'
-import { useHistory } from 'react-router-dom';
-import Cookies from 'universal-cookie'
+// import { useHistory } from 'react-router-dom';
+// import Cookies from 'universal-cookie'
 import "./Home.css"
 
-import toggleButton from "../toggleButton";
+// import toggleButton from "../toggleButton";
 
-const cookies = new Cookies();
+// const cookies = new Cookies();
 const host = "http://35.229.29.153/api"
 
 
@@ -28,7 +28,8 @@ class Home extends Component {
           }
     }
 
-    async componentDidMount() {
+    //IMPORTANT NOTE: Took out async keyword before componentDidMount()
+     componentDidMount() {
         axios.get(host + '/courses')
         .then(response => {
             this.setState({courses: response.data})
@@ -83,7 +84,7 @@ class Home extends Component {
             const trackTag = this.state.trackTags[i]
             const tracks = this.state.tracks
             for (var j = 0; j < this.state.tracks.length; j++) {
-                if (this.state.tracks[i]["track_id"] === trackTag["name"]) {
+                if (this.state.tracks[i]["track_id"] === trackTag["track_id"]) {
                     tracks[j]["disabled"] = false
                     this.setState({tracks})
                     break
@@ -163,7 +164,7 @@ class Home extends Component {
                         <ReactTags
                             tags={this.state.trackTags} // <-- THIS IS ISSUE
                             suggestions={this.state.tracks} 
-                            onDelete={this.onDelete.bind(this)}
+                            onDelete={this.onTrackDeletion.bind(this)}
                             onAddition={this.onTrackAddition.bind(this)}
                             placeholder="Add new track..." />
                             <br/>

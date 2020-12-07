@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import axios from 'axios'
 import Cookies from 'universal-cookie'
 import "./About.css"
-import { useHistory } from 'react-router'
 
 const cookies = new Cookies()
 const host = "http://35.229.29.153/api"
