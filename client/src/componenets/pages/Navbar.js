@@ -11,6 +11,7 @@ export default class Navbar extends Component {
       return (
           <div className="container">
             <NavLink to="/" className="nav-link">Home</NavLink>
+            <NavLink to="/results" className="nav-link">Results</NavLink>
             <NavLink to="/about" className="nav-link">About</NavLink>
             {/*<NavLink to="/notify" className="nav-link">Notify Us</NavLink>*/}
             {/*<NavLink to="/get_classes" className="nav-link">Get Classes</NavLink>*/}
