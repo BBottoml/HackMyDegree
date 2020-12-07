@@ -2,6 +2,7 @@ import json
 import os 
 from flask import Flask, request
 from flask_mysqldb import MySQL
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from os.path import join, dirname
 from dotenv import load_dotenv
@@ -22,41 +23,48 @@ mysql = MySQL(app)
 
 # sqlAlchemy setup (ORM)
 # remark: sqlalchemy needs to be imported after call to load_dotenv
-from sqlalchemy import * 
+#from sqlalchemy import * 
 
 URI = 'mysql://' + os.environ.get("DB_UNAME") + ':' + os.environ.get("DB_PASSWORD") + '@' + os.environ.get("DB_HOST")
-engine = create_engine(URI)
 USE_DB = 'USE ' + os.environ.get("DB_NAME")
+app.config['SQLALCHEMY_DATABASE_URI'] = URI
+db = SQLAlchemy(app)
+engine = db.engine
+engine.execute(USE_DB)
+
+'''
+engine = create_engine(URI)
 engine.execute(USE_DB)
 engine.echo = False
 metadata = MetaData(engine)
 conn = engine.connect()
+'''
 
 # models
-user_courses = Table(
-   'User_Course', metadata, 
-   Column('user_id', Integer), 
-   Column('course_id', String), 
+user_courses = db.Table(
+   'User_Course', db.metadata, 
+   db.Column('user_id', db.Integer), 
+   db.Column('course_id', db.String) 
 )
 
-user_tracks = Table(
-   'User_Track', metadata, 
-   Column('user_id', Integer), 
-   Column('track_id', String), 
+user_tracks = db.Table(
+   'User_Track', db.metadata, 
+   db.Column('user_id', db.Integer), 
+   db.Column('track_id', db.String) 
 )
 
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
-    id, name = column('course_id'), column('course_title')
-    q = select([id.label('id'), name.label('name')]).select_from(text('Course'))
-    result = conn.execute(q)
+    id, name = db.Column('course_id'), db.Column('course_title')
+    q = db.select([id.label('id'), name.label('name')]).select_from(db.text('Course'))
+    result = engine.execute(q)
     return orm_result_to_json(result)
 
 @app.route("/api/tracks", methods=["GET"])
 def get_tracks():
-    id, name = column('track_id'), column('track_name')
-    q = select([id.label('id'), name.label('name')]).select_from(text('Track'))
-    result = conn.execute(q)
+    id, name = db.Column('track_id'), db.Column('track_name')
+    q = db.select([id.label('id'), name.label('name')]).select_from(db.text('Track'))
+    result = engine.execute(q)
     return orm_result_to_json(result)
 
 '''
@@ -76,28 +84,34 @@ def add_courses():
     data = request.get_json()
     uid = data["user_id"]
     courses = data["courses"]
+    print(data)
 
+    engine.execute(USE_DB)
     q = user_courses.delete(None).where(user_courses.c.user_id == uid)
-    conn.execute(q)
+    engine.execute(q)
 
     for course in courses:
         q = user_courses.insert(None).values(user_id=uid, course_id=course)
-        conn.execute(q) 
+        engine.execute(q) 
 
     return json.dumps({'status': 'valid'})
 
 @app.route("/api/add/tracks", methods=["POST"])
 def add_tracks(): 
+    
     data = request.get_json()
+    print(data)
+
     uid = data["user_id"]
     tracks = data["tracks"]
-
+        
+    engine.execute(USE_DB)
     q = user_tracks.delete(None).where(user_tracks.c.user_id == uid)
-    conn.execute(q)
+    engine.execute(q)
 
     for track in tracks:
         q = user_tracks.insert(None).values(user_id=uid, track_id=track)
-        conn.execute(q) 
+        engine.execute(q) 
 
     return json.dumps({'status': 'valid'})
 
