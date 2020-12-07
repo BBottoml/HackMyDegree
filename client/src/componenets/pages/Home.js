@@ -48,13 +48,33 @@ class Home extends Component {
     In handleLogin() in Login.js: cookies.get('user_id', res.data.user_id, { path: '/', maxAge: 999999})
 
     */
+    console.log("Start 1")
+    console.log("tracks")
+    console.log(this.state.trackTags)
+
+    console.log("courses")
+    console.log(this.state.tags)
+
+
+    var chosen_course_ids = []
+
+    for (var i = 0; i < this.state.tags.length; i++) {
+        for (var j = 0; j < this.state.courses.length; j++) {
+            if (this.state.tags[i] === this.state.courses[j]["name"]) {
+                chosen_course_ids.push(this.state.courses[j]["course_id"])
+                break
+            }
+        }
+    }
     axios
-    .post(host + "/add/courses", {"user_id": cookies.get('user_id'), "courses": this.state.tags})
+    .post(host + "/add/courses", {"user_id": cookies.get('user_id'), "courses": chosen_course_ids})
     .then((res) => {
         let resp = res.data.status
         if (resp === "invalid") {
+            console.log("INVALID")
             alert("Something went wrong for Adding Courses")
         } else {
+            console.log("nOT INVALID")
             alert("Adding courses success")
         }
     })
@@ -62,13 +82,27 @@ class Home extends Component {
         console.error(err);}
     )
 
+
+    var chosen_track_ids = []
+
+    for (var k = 0; k < this.state.trackTags.length; k++) {
+        for (var p = 0; p < this.state.tracks.length; p++) {
+            if (this.state.trackTags[k] === this.state.tracks[p]["name"]) {
+                chosen_track_ids.push(this.state.tracks[p]["track_id"])
+                break
+            }
+        }
+    }
+    
     axios
-    .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": this.state.trackTags})
+    .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": chosen_track_ids})
     .then((res) => {
         let resp = res.data.status
         if (resp === "invalid") {
+            console.log("INVALID")
             alert("Something went wrong for Adding Tracks")
         } else {
+            console.log("Tracks not invalid")
             alert("Adding tracks success")
         }
     })
