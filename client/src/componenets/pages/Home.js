@@ -55,7 +55,6 @@ class Home extends Component {
     console.log("courses")
     console.log(this.state.tags)
 
-
     var chosen_course_ids = []
 
     for (var i = 0; i < this.state.tags.length; i++) {
@@ -93,7 +92,7 @@ class Home extends Component {
             }
         }
     }
-    
+
     axios
     .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": chosen_track_ids})
     .then((res) => {
