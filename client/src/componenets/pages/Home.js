@@ -17,10 +17,10 @@ class Home extends Component {
        
         this.state = {
             tags: [],
-            courses: null, 
-
+            courses: null,
+            tracks: null,
             /* value from after fall 2019 slider */
-            afterFall2019: true,
+            // afterFall2019: true,
 
           }
     }
@@ -30,6 +30,15 @@ class Home extends Component {
         .then(response => {
             this.setState({courses: response.data})
             console.log(this.state.courses)
+        })
+        .catch(err => {
+            console.log(err)
+        })
+
+        axios.get(host + '/tracks')
+        .then(response => {
+            this.setState({tracks: response.data})
+            console.log(this.state.tracks)
         })
         .catch(err => {
             console.log(err)
@@ -98,15 +107,22 @@ class Home extends Component {
                             onAddition={this.onAddition.bind(this)}
                             placeholder="Add new course..." />
                         <br />
-                        <h3>Step (ii) Select your track timeline</h3> 
-                        <p>In other words, if you started Fall 2019 or forward, select After Fall 2019 otherwise select before</p>
+                        {/* <h3>Step (ii) Select your track timeline</h3> 
+                        <p>In other words, if you started Fall 2019 or forward, select After Fall 2019 otherwise select before</p> */}
 
                         {/* Make a slider */}
-                        <div class="selection-stage">
+                        {/* <div class="selection-stage">
                             <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>Before Fall 2019</button>&nbsp;&nbsp;
                             <button type="button" className="btn btn-outline-warning" onClick={this.handleClick}>After Fall 2019</button>
-                        </div>
+                       </div>   */}
 
+                        <h3>Step (ii) Select the tracks you wish to complete</h3>
+                        <ReactTags
+                            tags={this.state.tags}
+                            suggestions={this.state.tracks}
+                            onDelete={this.onDelete.bind(this)}
+                            onAddition={this.onAddition.bind(this)}
+                            placeholder="Add new track..." />
                     </div> 
                     
                 </div>

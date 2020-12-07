@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import axios from 'axios'
 import Cookies from 'universal-cookie'
 import "./About.css"
+import { useHistory } from 'react-router'
 
 const cookies = new Cookies()
 const host = "http://35.229.29.153/api"
@@ -37,7 +38,8 @@ export default class About extends Component {
             } else {
                 cookies.set('user_id', res.data.user_id, { path: '/', maxAge: 999999})
                 window.location.href = "http://localhost:3000/home"
-            }
+
+            }   
         })
         .catch(err => {
             console.error(err);
