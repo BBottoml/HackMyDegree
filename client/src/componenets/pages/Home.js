@@ -60,10 +60,10 @@ class Home extends Component {
 
     for (var i = 0; i < this.state.tags.length; i++) {
         console.log("here5")
-        chosen_ids.push(this.state.courses[i]["id"])
+        chosen_ids.push(this.state.tags[i]["id"])
     }
     axios
-    .post(host + "/add/courses", {"user_id": cookies.get('user_id'), "courses": chosen_ids})
+    .post(host + "/add/courses", {"user_id": cookies.get('user_id'), "courses": chosen_ids}, {headers: {"Access-Control-Allow-Origin": "*"}})
     .then((res) => {
         let resp = res.data.status
         if (resp === "invalid") {
@@ -84,7 +84,7 @@ class Home extends Component {
     }
 
     axios
-    .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": chosen_ids})
+    .post(host + "/add/tracks", {"user_id": cookies.get('user_id'), "tracks": chosen_ids}, {headers: {"Access-Control-Allow-Origin": "*"}})
     .then((res) => {
         let resp = res.data.status
         if (resp === "invalid") {
@@ -96,7 +96,7 @@ class Home extends Component {
     .catch(err => {
         console.error(err);}
     )
-
+    
     this.props.history.push(
         {pathname: "/results",
         data: [this.state.tags, this.state.trackTags]
