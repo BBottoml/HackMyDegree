@@ -36,8 +36,9 @@ export default class About extends Component {
                 alert("Email or password is incorrect.")
             } else {
                 cookies.set('user_id', res.data.user_id, { path: '/', maxAge: 999999})
-                window.location.href = "http://localhost:3000/home"
-            }
+                window.location.href = "/home"
+            
+            }   
         })
         .catch(err => {
             console.error(err);
@@ -64,6 +65,10 @@ export default class About extends Component {
     
 
     render() {
+
+        if (cookies.get("user_id") != null) {
+            window.location.href = "/home"
+        }
 
         return(
 
