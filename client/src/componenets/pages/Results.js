@@ -8,6 +8,11 @@ export class Results extends Component {
             </div>
         )
     }
+
+    handleClick = () => {
+       
+  
+    }
 }
 
 export default Results
