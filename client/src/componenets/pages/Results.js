@@ -8,6 +8,14 @@ export class Results extends Component {
             </div>
         )
     }
+
+    handleClick = () => {
+        // this.props.history.push(
+        //     {pathname: "/results"
+        //     data:
+        // })
+  
+    }
 }
 
 export default Results

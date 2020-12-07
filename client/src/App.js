@@ -9,6 +9,7 @@ import Home from "./componenets/pages/Home";
 import About from "./componenets/pages/About"
 import Results from "./componenets/pages/Results"
 import Login from "./componenets/pages/Login"
+import Get_Classes from './componenets/pages/Get_Classes';
 
 // cookie functionality 
 const cookies = new Cookies();
@@ -24,7 +25,7 @@ function App() {
         <Route path="/home" component={Home} className="Route" />
         <Route path="/about" component={About} className="Route"/> 
         <Route path="/results" component={Results} className="Route"/> 
-        
+        {/* <Route path='/get_classes' component={Get_Classes} className="Route"/>  */}
       </Router>
 
      
