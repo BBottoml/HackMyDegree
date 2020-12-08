@@ -55,6 +55,7 @@ user_tracks = db.Table(
 
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
+    engine.execute(USE_DB)
     id, name = db.Column('course_id'), db.Column('course_title')
     q = db.select([id.label('id'), name.label('name')]).select_from(db.text('Course'))
     result = engine.execute(q)
@@ -62,6 +63,7 @@ def get_courses():
 
 @app.route("/api/tracks", methods=["GET"])
 def get_tracks():
+    engine.execute(USE_DB)
     id, name = db.Column('track_id'), db.Column('track_name')
     q = db.select([id.label('id'), name.label('name')]).select_from(db.text('Track'))
     result = engine.execute(q)
