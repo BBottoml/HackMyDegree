@@ -59,18 +59,30 @@ user_tracks = db.Table(
 
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
-    engine.execute(USE_DB)
+    sess = Session(bind=engine)
+    sess.connection(execution_options={'isolation_level': 'READ COMMITTED'})
+
+    sess.execute(USE_DB)
     id, name = db.Column('course_id'), db.Column('course_title')
     q = db.select([id.label('id'), name.label('name')]).select_from(db.text('Course'))
-    result = engine.execute(q)
+    result = sess.execute(q)
+    sess.commit()
+    sess.close()
+
     return orm_result_to_json(result)
 
 @app.route("/api/tracks", methods=["GET"])
 def get_tracks():
-    engine.execute(USE_DB)
+    sess = Session(bind=engine)
+    sess.connection(execution_options={'isolation_level': 'READ UNCOMMITTED'})
+
+    sess.execute(USE_DB)
     id, name = db.Column('track_id'), db.Column('track_name')
     q = db.select([id.label('id'), name.label('name')]).select_from(db.text('Track'))
-    result = engine.execute(q)
+    result = sess.execute(q)
+    sess.commit()
+    sess.close()
+
     return orm_result_to_json(result)
 
 '''
@@ -90,15 +102,20 @@ def add_courses():
     data = request.get_json()
     uid = data["user_id"]
     courses = data["courses"]
-    print(data)
 
-    engine.execute(USE_DB)
+    sess = Session(bind=engine)
+    sess.connection(execution_options={'isolation_level': 'REPEATABLE READ'})
+
+    sess.execute(USE_DB)
+
     q = user_courses.delete(None).where(user_courses.c.user_id == uid)
-    engine.execute(q)
+    sess.execute(q)
 
     for course in courses:
         q = user_courses.insert(None).values(user_id=uid, course_id=course)
-        engine.execute(q) 
+        sess.execute(q) 
+    sess.commit()
+    sess.close()
 
     return json.dumps({'status': 'valid'})
 
@@ -109,14 +126,19 @@ def add_tracks():
 
     uid = data["user_id"]
     tracks = data["tracks"]
-        
-    engine.execute(USE_DB)
+
+    sess = Session(bind=engine)
+    sess.connection(execution_options={'isolation_level': 'REPEATABLE READ'})
+    
+    sess.execute(USE_DB)
     q = user_tracks.delete(None).where(user_tracks.c.user_id == uid)
-    engine.execute(q)
+    sess.execute(q)
 
     for track in tracks:
         q = user_tracks.insert(None).values(user_id=uid, track_id=track)
-        engine.execute(q) 
+        sess.execute(q) 
+    sess.commit()
+    sess.close()
 
     return json.dumps({'status': 'valid'})
 
@@ -274,10 +296,13 @@ def compute_schedule():
 
     # count all possible previously taken required courses of one track towards electives of another
     chosen_results, track_elective_block, track_elective_num = scheduling_algo_helper(completed_courses, elective_map, chosen_results, track_elective_block, track_elective_num)
- 
+    
+    print(chosen_results)
+
     # count all possible required courses (to be taken) of one track towards electives of another
     chosen_results, track_elective_block, track_elective_num = scheduling_algo_helper(req_courses, elective_map, chosen_results, track_elective_block, track_elective_num)
     
+    print(chosen_results)
     for result in results:
         course_id = result[3] 
         block_id = result[2]
@@ -315,6 +340,9 @@ def compute_schedule():
     for key,values in req_courses.items():
         courses.append(key) 
     
+    for elective in electives:
+        courses.append(elective)
+    
     cur.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
     cur.execute("START TRANSACTION;")
     course_names = []
@@ -334,7 +362,7 @@ def compute_schedule():
 @app.route("/api/users/stats", methods=["GET"])
 def users_tracks():
     cur = mysql.connection.cursor()
-    cur.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED;")
+    cur.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
     cur.execute("START TRANSACTION;")
     cur.execute("""
                 SELECT email, track_name
@@ -395,8 +423,8 @@ def scheduling_algo_helper(course_dict, elective_map, chosen_results, track_elec
             block_id = match[2]
             track_id = match[0]
 
-            if track_id == t_id:
-                continue 
+            if t_id == track_id:
+                continue # a required course cannot count towards an elective
 
             if block_id is None:
                 if track_id in track_elective_num:
