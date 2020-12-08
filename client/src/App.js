@@ -10,10 +10,10 @@ import About from "./componenets/pages/About"
 import Results from "./componenets/pages/Results"
 import Login from "./componenets/pages/Login"
 import Logout from './componenets/pages/Logout'
+import Compare from './componenets/pages/Compare'
 
 // cookie functionality 
 const cookies = new Cookies();
-
 
 
 function App() {
@@ -26,6 +26,7 @@ function App() {
         <Route path="/about" component={About} className="Route"/> 
         <Route path="/results" component={Results} className="Route"/> 
         <Route path="/logout" component={Logout} className="Route" />
+        <Route path="compare" component={Compare} className="Route" />
         {/* <Route path='/get_classes' component={Get_Classes} className="Route"/>  */}
       </Router>
 
