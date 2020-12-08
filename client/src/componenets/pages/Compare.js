@@ -60,7 +60,7 @@ export class Compare extends Component {
         // }
 
         for (var j = 0; j < this.state.users_tracks.length; j++) {
-            usersTracksPairs.push(<h3><li key={j}>Random CS Major {j + 1}: {this.state.users_tracks[j]}</li></h3>)
+            usersTracksPairs.push(<h3><li key={j}>Anon CS Major {j + 1}: {this.state.users_tracks[j]}</li></h3>)
         }
         return (<div>
             <h1>Compare</h1>
