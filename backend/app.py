@@ -22,9 +22,6 @@ app.config['MYSQL_DB'] = os.environ.get("DB_NAME")
 mysql = MySQL(app)
 
 # sqlAlchemy setup (ORM)
-# remark: sqlalchemy needs to be imported after call to load_dotenv
-#from sqlalchemy import * 
-
 URI = 'mysql://' + os.environ.get("DB_UNAME") + ':' + os.environ.get("DB_PASSWORD") + '@' + os.environ.get("DB_HOST")
 USE_DB = 'USE ' + os.environ.get("DB_NAME")
 app.config['SQLALCHEMY_DATABASE_URI'] = URI
@@ -33,14 +30,6 @@ engine = db.engine
 engine.execute(USE_DB)
 
 Session = db.sessionmaker(bind=engine)
-
-'''
-engine = create_engine(URI)
-engine.execute(USE_DB)
-engine.echo = False
-metadata = MetaData(engine)
-conn = engine.connect()
-'''
 
 # models
 user_courses = db.Table(
@@ -54,8 +43,6 @@ user_tracks = db.Table(
    db.Column('user_id', db.Integer), 
    db.Column('track_id', db.String) 
 )
-
-# TODO: Implement isolation levels for ORM queries
 
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
@@ -74,7 +61,7 @@ def get_courses():
 @app.route("/api/tracks", methods=["GET"])
 def get_tracks():
     sess = Session(bind=engine)
-    sess.connection(execution_options={'isolation_level': 'READ UNCOMMITTED'})
+    sess.connection(execution_options={'isolation_level': 'READ COMMITTED'})
 
     sess.execute(USE_DB)
     id, name = db.Column('track_id'), db.Column('track_name')
@@ -343,6 +330,7 @@ def compute_schedule():
     for elective in electives:
         courses.append(elective)
     
+    # Uncomitted used here since course table will rarely every change
     cur.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
     cur.execute("START TRANSACTION;")
     course_names = []
