@@ -16,6 +16,7 @@ export default class Navbar extends Component {
             {/*<NavLink to="/notify" className="nav-link">Notify Us</NavLink>*/}
             {/*<NavLink to="/get_classes" className="nav-link">Get Classes</NavLink>*/}
             <NavLink to="/logout" className="nav-link">Logout</NavLink>
+            <NavLink to="/compare" className="nav-link">Compare</NavLink>
           </div>
       );
     } else {
