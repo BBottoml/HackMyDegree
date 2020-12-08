@@ -423,7 +423,7 @@ def scheduling_algo_helper(course_dict, elective_map, chosen_results, track_elec
             block_id = match[2]
             track_id = match[0]
 
-            if t_id == track_id:
+            if track_id in t_id:
                 continue # a required course cannot count towards an elective
 
             if block_id is None:
