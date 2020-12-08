@@ -26,7 +26,7 @@ class Home extends Component {
         }
   }
   //IMPORTANT NOTE: Took out async keyword before componentDidMount()
-    componentDidMount() {
+   async componentDidMount() {
       axios.get(host + '/courses')
       .then(response => {
           this.setState({courses: response.data})

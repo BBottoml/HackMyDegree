@@ -26,7 +26,7 @@ function App() {
         <Route path="/about" component={About} className="Route"/> 
         <Route path="/results" component={Results} className="Route"/> 
         <Route path="/logout" component={Logout} className="Route" />
-        <Route path="compare" component={Compare} className="Route" />
+        <Route path="/compare" component={Compare} className="Route" />
         {/* <Route path='/get_classes' component={Get_Classes} className="Route"/>  */}
       </Router>
 
