@@ -5,6 +5,8 @@ import ReactTags from 'react-tag-autocomplete'
 import Cookies from 'universal-cookie'
 import "./Home.css"
 import Button from 'react-bootstrap/Button';
+// import 'bootstrap/dist/css/bootstrap.min.css';
+
 // import toggleButton from "../toggleButton";
 const cookies = new Cookies();
 const host = "http://35.229.29.153/api"
@@ -24,9 +26,11 @@ class Home extends Component {
         }
   }
   //IMPORTANT NOTE: Took out async keyword before componentDidMount()
-    componentDidMount() {
+   componentDidMount() {
       axios.get(host + '/courses')
       .then(response => {
+          console.log("Response Course")
+          console.log(response.data)
           this.setState({courses: response.data})
       })
       .catch(err => {
@@ -225,10 +229,11 @@ class Home extends Component {
                           placeholder="Add new track..." />
                           <br/>
 
-                            <Button variant="secondary" size="lg" onClick={this.handleSubmitClick}>
+                        <>                        
+                            <Button variant="primary" size="lg" onClick={this.handleSubmitClick}>
                                 Submit
                             </Button>{' '}
-
+                        </>
                   </div>
                 
               </div>
