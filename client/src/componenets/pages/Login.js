@@ -35,9 +35,13 @@ export default class About extends Component {
             if (resp === "invalid") {
                 alert("Email or password is incorrect.")
             } else {
-                cookies.set('user_id', res.data.user_id, { path: '/', maxAge: 999999})
-                window.location.href = "/home"
-            
+                if (this.state.email.trim()  === "" || this.state.password.trim() === "") {
+                    alert("Please ensure both fields are filled in.")
+                }
+                else {
+                    cookies.set('user_id', res.data.user_id, { path: '/', maxAge: 999999})
+                    window.location.href = "/home"
+                }
             }   
         })
         .catch(err => {
