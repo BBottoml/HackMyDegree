@@ -15,27 +15,46 @@ export class Compare extends Component {
         }
     }
 
-   async componentDidMount() {
+    componentDidMount() {
         console.log("In CDM")
         axios.get(host + '/users/stats')
         .then(response => {
-            // console.log("Resp data")
-            // console.log(response.data)
-            this.setState({user_stats: response.data})
-            console.log("User stats")
-            console.log(this.state.user_stats)
-        })
 
+            this.setState({user_stats: response.data})
         
-       
+            // console.log("Resp data")
+
+            // var usersList = []
+            // var trackListsList = [] 
+            // console.log("Data")
+            // console.log(response.data)
+
+            // console.log("Length")
+            // console.log(response.data.length)
+            // for (var i = 0; i < response.data.length; i++) {
+                
+            // }
+          
+            // console.log("User stats")
+            // console.log(this.state.user_stats)
+        })
     }
+       
     render() {
+
+        const usersTracksPairs = []
+
+        // var i = 0
+        for (const [index, value] of this.state.user_stats.entries()) {
+            usersTracksPairs.push(<h3><li key={index}>Random CS Major {index + 1}: {value}</li></h3>)
+        }
         return (<div>
             <h1>Compare</h1>
 
             <br />
             <br />
-            <h3>Here's what other CS majors are doing!</h3>
+            <h3>See how your tracks stack up against your peers!</h3>
+                {usersTracksPairs}
             </div>
             
             )
