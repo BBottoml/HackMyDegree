@@ -32,6 +32,8 @@ db = SQLAlchemy(app)
 engine = db.engine
 engine.execute(USE_DB)
 
+Session = db.sessionmaker(bind=engine)
+
 '''
 engine = create_engine(URI)
 engine.execute(USE_DB)
@@ -52,6 +54,8 @@ user_tracks = db.Table(
    db.Column('user_id', db.Integer), 
    db.Column('track_id', db.String) 
 )
+
+# TODO: Implement isolation levels for ORM queries
 
 @app.route("/api/courses", methods=["GET"])
 def get_courses():
@@ -102,7 +106,6 @@ def add_courses():
 def add_tracks(): 
     
     data = request.get_json()
-    print(data)
 
     uid = data["user_id"]
     tracks = data["tracks"]
@@ -117,6 +120,7 @@ def add_tracks():
 
     return json.dumps({'status': 'valid'})
 
+'''
 @app.route("/api/add/hours", methods=["POST"])
 def add_hours():
     data = request.get_json()
@@ -129,6 +133,7 @@ def add_hours():
     cur.close() 
     
     return json.dumps({'status': 'valid'})
+''' 
 
 @app.route("/api/register", methods=["POST"])
 def sign_up():
@@ -142,8 +147,11 @@ def sign_up():
     
     # insert into user table
     cur = mysql.connection.cursor()
+    cur.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
+    cur.execute("START TRANSACTION;")
     cur.execute("INSERT INTO User(email, password) VALUES (%s, PASSWORD(%s))", (email, pswd))
-    mysql.connection.commit()
+    cur.execute("COMMIT;")
+
     cur.close()
     return json.dumps({'status': 'valid'})
 
@@ -157,9 +165,13 @@ def login():
         return json.dumps({'status': 'invalid'})
     
     cur = mysql.connection.cursor()
+    cur.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED;")
+    cur.execute("START TRANSACTION;")
     cur.execute("SELECT user_id FROM User WHERE email = %s AND PASSWORD(%s) = password", (email, pswd))
     result = cur.fetchone()
-    if result == None or result == ():
+    cur.execute("COMMIT;")
+    
+    if result is None or result == ():
         return json.dumps({'status': 'invalid'})
     
     user_id = int(result[0])
@@ -171,6 +183,8 @@ def compute_schedule():
     user_id = data["user_id"]
 
     cur = mysql.connection.cursor()
+    cur.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;")
+    cur.execute("START TRANSACTION;")
     cur.execute("""
                 SELECT Track_Req.track_id, Track_Req.course_id, Track_Req.track_req_id, Professor.score
                 FROM Track_Req
@@ -192,7 +206,7 @@ def compute_schedule():
                 """, (user_id,user_id)) # this returns the needed courses sorted by professor RMT score to complete tracks
     results = cur.fetchall()
     
-    req_courses = {} 
+    req_courses = {} # course_id -> track_id 
     track_map = {}
 
     for result in results:
@@ -227,14 +241,50 @@ def compute_schedule():
                 ORDER BY cnt DESC;
                 """, (user_id, user_id))
     results = cur.fetchall()
+    cur.execute("COMMIT;")
+
+    completed_courses = [] 
+    cur.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED;")
+    cur.execute("START TRANSACTION;")
+    cur.execute("""
+                SELECT User_Course.course_id, Track_Req.track_id
+                FROM User_Course 
+                INNER JOIN Track_Req ON User_Course.course_id=Track_Req.course_id
+                WHERE user_id = %s
+                """, (user_id,))
+    completed_courses_cur = cur.fetchall() 
+    cur.execute("COMMIT;")
+
+    completed_courses = {}
+    for completed_course in completed_courses_cur:
+        if completed_course[0] not in completed_courses:
+            completed_courses[completed_course[0]] = set()
+        completed_courses[completed_course[0]].add(completed_course[1])
 
     track_elective_block = {} 
     track_elective_num = {} 
     electives = set()
+
+    elective_map = {}
+    chosen_results = {}
+    for result in results: # construct elective_map 
+        if result[3] not in elective_map:
+            elective_map[result[3]] = set() 
+        elective_map[result[3]].add(result)
+
+    # count all possible previously taken required courses of one track towards electives of another
+    chosen_results, track_elective_block, track_elective_num = scheduling_algo_helper(completed_courses, elective_map, chosen_results, track_elective_block, track_elective_num)
+ 
+    # count all possible required courses (to be taken) of one track towards electives of another
+    chosen_results, track_elective_block, track_elective_num = scheduling_algo_helper(req_courses, elective_map, chosen_results, track_elective_block, track_elective_num)
+    
     for result in results:
         course_id = result[3] 
         block_id = result[2]
         track_id = result[0] 
+
+        if track_id in chosen_results and course_id in chosen_results[track_id]:
+            continue
 
         if block_id is None:
             if track_id in track_elective_num:
@@ -262,20 +312,11 @@ def compute_schedule():
             electives.add(course_id)
 
     courses = []
-    for elective in electives:
-        cur.execute("""
-                    SELECT user_id
-                    FROM User_Course
-                    WHERE user_id=%s AND course_id=%s
-                    """, (user_id, elective))
-        result = cur.fetchone()
-        if result == None or result == ():
-            courses.append(elective)
-
-
     for key,values in req_courses.items():
         courses.append(key) 
-
+    
+    cur.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
+    cur.execute("START TRANSACTION;")
     course_names = []
     for course in courses:
         cur.execute("""
@@ -285,14 +326,52 @@ def compute_schedule():
                     """, (course,))
         result = cur.fetchone()
         course_names.append(result[0])
+    cur.execute("COMMIT;")
+    cur.close()
     
-    return json.dumps({'courses': course_names}) 
+    return json.dumps({'courses': course_names})
+
+@app.route("/api/users/stats", methods=["GET"])
+def users_tracks():
+    cur = mysql.connection.cursor()
+    cur.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED;")
+    cur.execute("START TRANSACTION;")
+    cur.execute("""
+                SELECT email, track_name
+                FROM User
+                INNER JOIN User_Track ON User.user_id=User_Track.user_id
+                INNER JOIN Track ON User_Track.track_id=Track.track_id
+                """)
+    results = cur.fetchall()
+    cur.execute("COMMIT;")
+    cur.close()
+
+    users = []
+    user_map = {} 
+    
+    for result in results:
+        if result[0] not in user_map:
+            user_map[result[0]] = []
+        user_map[result[0]].append(result[1])
+    
+    for key,value in user_map.items():
+        curr_map = {}
+        curr_map["name"] = key 
+        curr_map["courses"] = value
+        users.append(curr_map)
+
+    return json.dumps(users)
 
 def user_exists(email):
     cur = mysql.connection.cursor()
+
+    cur.execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;")
+    cur.execute("START TRANSACTION;")
     query = "SELECT user_id FROM User WHERE email = %s"
     cur.execute(query, (email,))
     result = cur.fetchall()
+    cur.execute("COMMIT;")
+
     cur.close()
     return result != ()
 
@@ -304,6 +383,44 @@ def orm_result_to_json(result):
             row_map[column] = value
         arr.append(row_map)
     return json.dumps(arr)
+
+def scheduling_algo_helper(course_dict, elective_map, chosen_results, track_elective_block, track_elective_num):
+    for c_id, t_id in course_dict.items():
+        if c_id not in elective_map:
+            continue
+
+        potential_matches = elective_map[c_id]
+        for match in potential_matches: 
+            course_id = match[3] 
+            block_id = match[2]
+            track_id = match[0]
+
+            if track_id == t_id:
+                continue 
+
+            if block_id is None:
+                if track_id in track_elective_num:
+                    remaining_courses = track_elective_num[track_id]
+                    if remaining_courses == 0:
+                        continue
+                else:
+                    track_elective_num[track_id] = match[1]
+                    remaining_courses = match[1]
+                
+                track_elective_num[track_id] -= 1
+            else:
+                if track_id in track_elective_block:
+                    if block_id in track_elective_block[track_id]:
+                        continue 
+                else:
+                    track_elective_block[track_id] = set()
+                
+                track_elective_block[track_id].add(block_id)
+            
+            if track_id not in chosen_results:
+                chosen_results[track_id] = set()
+            chosen_results[track_id].add(course_id)
+    return chosen_results, track_elective_block, track_elective_num
 
 # DEPRECATED: No longer needed since certain queries now executed using ORM
 '''
